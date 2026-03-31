@@ -7,6 +7,7 @@ let signer   = null;
 let contract = null;
 
 const HARDHAT_CHAIN_ID = "0x7A69"; // 31337 in hex
+const SEPOLIA_CHAIN_ID = "0xAA36A7"; // 11155111 in hex
 
 async function switchToHardhat() {
   try {
@@ -41,22 +42,16 @@ export async function connectWallet() {
   // Request accounts first
   await window.ethereum.request({ method: "eth_requestAccounts" });
 
-  // Auto-switch to Hardhat Local — no manual switching needed
-  await switchToHardhat();
-
-  // Small delay to let MetaMask finish switching
-  await new Promise((r) => setTimeout(r, 500));
-
   provider = new ethers.BrowserProvider(window.ethereum);
   signer   = await provider.getSigner();
 
-  // Double-check chain ID
+  // Double-check chain ID (Hardhat or Sepolia supported)
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);
-  if (chainId !== 31337) {
+  if (![31337, 11155111].includes(chainId)) {
     throw new Error(
-      `Still on wrong network (Chain ID: ${chainId}). ` +
-      `Please manually select "Hardhat Local" in MetaMask and try again.`
+      `Unsupported network (Chain ID: ${chainId}). ` +
+      `Switch MetaMask to Hardhat Local (31337) or Sepolia (11155111) and try again.`
     );
   }
 
