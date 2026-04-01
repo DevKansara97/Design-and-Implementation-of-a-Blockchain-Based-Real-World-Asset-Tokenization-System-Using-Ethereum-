@@ -1,5 +1,6 @@
 // frontend/src/components/TransferAsset.js
 import React, { useState } from "react";
+import { ethers } from "ethers";
 
 export default function TransferAsset({ contract }) {
   const [tokenId, setTokenId] = useState("");
@@ -14,13 +15,31 @@ export default function TransferAsset({ contract }) {
     setStatus("");
     setAsset(null);
     try {
-      const [a, owner] = await Promise.all([
+      const [a, owner, signerAddr] = await Promise.all([
         contract.getAsset(BigInt(tokenId)),
         contract.ownerOf(BigInt(tokenId)),
+        contract.runner.getAddress(),
       ]);
-      setAsset({ ...a, ownerAddress: owner });
+      
+      // Properly unpack the asset struct from ethers
+      const assetData = {
+        tokenId: a[0],
+        assetId: a[1],
+        assetType: a[2],
+        ipfsCID: a[3],
+        issuer: a[4],
+        isVerified: a[5],
+        registeredAt: a[6],
+        verifiedAt: a[7],
+        ownerAddress: owner,
+        signerAddress: signerAddr,
+      };
+      
+      setAsset(assetData);
+      setStatus(""); // Clear any previous status
     } catch (e) {
       setStatus("❌ Asset not found: " + (e.reason || e.message));
+      setAsset(null);
     }
   };
 
@@ -30,17 +49,35 @@ export default function TransferAsset({ contract }) {
     setTxHash("");
     setStatus("Sending transfer transaction...");
     try {
-      const tx = await contract.transferAsset(toAddr, BigInt(tokenId));
+      // Validate and normalize the address (prevent ENS resolution attempts)
+      const normalizedAddr = ethers.getAddress(toAddr);
+      
+      const tx = await contract.transferAsset(normalizedAddr, BigInt(tokenId));
       setTxHash(tx.hash);
       setStatus("Waiting for confirmation...");
       await tx.wait();
       setStatus("✅ Asset transferred successfully!");
-      // Refresh
-      const [a, owner] = await Promise.all([
+      // Refresh asset data
+      const [a, owner, signerAddr] = await Promise.all([
         contract.getAsset(BigInt(tokenId)),
         contract.ownerOf(BigInt(tokenId)),
+        contract.runner.getAddress(),
       ]);
-      setAsset({ ...a, ownerAddress: owner });
+      
+      const assetData = {
+        tokenId: a[0],
+        assetId: a[1],
+        assetType: a[2],
+        ipfsCID: a[3],
+        issuer: a[4],
+        isVerified: a[5],
+        registeredAt: a[6],
+        verifiedAt: a[7],
+        ownerAddress: owner,
+        signerAddress: signerAddr,
+      };
+      
+      setAsset(assetData);
     } catch (e) {
       setStatus("❌ " + (e.reason || e.message));
     } finally {
@@ -71,6 +108,17 @@ export default function TransferAsset({ contract }) {
       </button>
 
       {asset && (
+        <button 
+          className="secondary" 
+          onClick={handleFetch} 
+          style={{ marginLeft: "0.5rem" }}
+          title="Refresh asset data"
+        >
+          🔄 Refresh
+        </button>
+      )}
+
+      {asset && (
         <div className="asset-card" style={{ marginTop: "1.5rem" }}>
           <div className="asset-header">
             <div>
@@ -96,7 +144,19 @@ export default function TransferAsset({ contract }) {
                   placeholder="0x..."
                 />
               </div>
-              <button className="primary" onClick={handleTransfer} disabled={loading || !toAddr}>
+              
+              {asset.ownerAddress && asset.signerAddress && 
+               asset.ownerAddress.toLowerCase() !== asset.signerAddress.toLowerCase() && (
+                <div className="alert warning" style={{ marginTop: "0.5rem" }}>
+                  ⚠️ You are not the owner of this asset. Only the owner can transfer it.
+                </div>
+              )}
+              
+              <button 
+                className="primary" 
+                onClick={handleTransfer} 
+                disabled={loading || !toAddr || (asset.ownerAddress && asset.signerAddress && asset.ownerAddress.toLowerCase() !== asset.signerAddress.toLowerCase())}
+              >
                 {loading ? "Transferring..." : "Transfer Ownership"}
               </button>
             </>
