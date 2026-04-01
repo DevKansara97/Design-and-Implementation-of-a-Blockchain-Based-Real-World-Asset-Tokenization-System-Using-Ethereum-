@@ -1,0 +1,9 @@
+{
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/build",
+  "env": {
+    "REACT_APP_CONTRACT_ADDRESS": "@REACT_APP_CONTRACT_ADDRESS",
+    "REACT_APP_PINATA_API_KEY": "@REACT_APP_PINATA_API_KEY",
+    "REACT_APP_PINATA_SECRET": "@REACT_APP_PINATA_SECRET"
+  }
+}
