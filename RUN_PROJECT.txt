@@ -1,0 +1,187 @@
+Project Run Instructions for RWA Tokenization System
+===================================================
+
+1. Prerequisites
+----------------
+- Node.js (recommended v18 or newer)
+- npm (bundled with Node.js)
+- MetaMask browser extension installed
+- Optional: Alchemy/Infura account for Sepolia RPC URL
+- Optional: Pinata account for IPFS upload
+
+2. Install Dependencies
+-----------------------
+From the project root:
+
+  npm install
+
+Then install frontend dependencies:
+
+  cd frontend
+  npm install
+  cd ..
+
+3. Configure Environment Variables
+-----------------------------------
+Create a root .env and a frontend/.env.
+
+Root .env (for Sepolia deployment and Etherscan verification):
+
+  cp .env.example .env
+
+Edit .env with:
+
+  PRIVATE_KEY=your_metamask_private_key_here
+  SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY
+  ETHERSCAN_API_KEY=your_etherscan_api_key_here
+
+Frontend .env (app configuration):
+
+  REACT_APP_CONTRACT_ADDRESS=0x...
+  REACT_APP_PINATA_API_KEY=your_pinata_api_key
+  REACT_APP_PINATA_SECRET=your_pinata_secret_key
+
+Note: `REACT_APP_CONTRACT_ADDRESS` must be set after contract deployment.
+
+4. Compile Smart Contracts
+--------------------------
+From project root:
+
+  npx hardhat compile
+
+5. Run the Test Suite
+----------------------
+From project root:
+
+  npx hardhat test
+
+6. Run a Local Blockchain Node
+------------------------------
+Open a new terminal and run:
+
+  npx hardhat node
+
+This starts a local Ethereum node at http://127.0.0.1:8545 and prints test account private keys.
+
+7. Deploy Contracts Locally
+---------------------------
+In another terminal from project root:
+
+  npx hardhat run scripts/deploy.js --network localhost
+
+Or use the package script:
+
+  npm run deploy:local
+
+The deploy script deploys:
+- RWATokenization (ERC-721 NFT contract)
+- FractionalAsset sample contract (ERC-20)
+
+After deployment, note the printed RWATokenization address.
+
+8. Configure Frontend Contract Address
+--------------------------------------
+In `frontend/.env`, set:
+
+  REACT_APP_CONTRACT_ADDRESS=<RWATokenization address>
+
+Then restart the frontend server if it is already running.
+
+9. Setup MetaMask for Local Development
+---------------------------------------
+- Open MetaMask
+- Add or switch to a new network:
+  - Network Name: Hardhat Local
+  - RPC URL: http://127.0.0.1:8545
+  - Chain ID: 31337
+  - Currency: ETH
+- Import one of the private keys printed by `npx hardhat node`
+- Make sure the imported account has ETH on the local node
+
+10. Start the Frontend
+----------------------
+From the frontend folder:
+
+  cd frontend
+  npm start
+
+Then open:
+
+  http://localhost:3000
+
+11. Connect MetaMask in the App
+-------------------------------
+- Click Connect MetaMask in the frontend UI.
+- Switch MetaMask to Hardhat Local or Sepolia as appropriate.
+- The app supports roles: Admin, Issuer, Verifier.
+
+12. Deploy to Sepolia Testnet
+-----------------------------
+Fill root `.env` with:
+
+  PRIVATE_KEY=your_sepolia_private_key
+  SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/ripHtzhebrEc6LD6i89eN
+  ETHERSCAN_API_KEY=IZMPGEYA97FSQ1Q1J2EZXDZTK8GXJ6S1UG
+
+Then deploy:
+
+  npx hardhat run scripts/deploy.js --network sepolia
+
+Or use:
+
+  npm run deploy:sepolia
+
+After deployment, update `frontend/.env`:
+
+  REACT_APP_CONTRACT_ADDRESS=<RWATokenization Sepolia address>
+
+Restart the frontend server.
+
+13. Setup MetaMask for Sepolia
+-----------------------------
+- In MetaMask, switch to Sepolia network.
+- If your account has no ETH, use a Sepolia faucet.
+- Connect the same account to the frontend.
+
+14. Notes on the App
+--------------------
+- The app reads contract ABIs and address from `frontend/src/utils/contract.js`.
+- Supported networks in the app:
+  - Hardhat Local (chainId 31337)
+  - Sepolia (chainId 11155111)
+- If contract code is missing at the configured address, the app shows an error.
+
+15. Useful Commands
+-------------------
+From project root:
+
+  npm run compile
+  npm run test
+  npm run node
+  npm run deploy:local
+  npm run deploy:sepolia
+  npm run verify
+  npm run frontend
+
+From frontend folder:
+
+  npm start
+  npm run build
+
+16. Recommended Run Flow
+------------------------
+1. Install dependencies
+2. Compile contracts
+3. Start `npx hardhat node`
+4. Deploy locally
+5. Set `REACT_APP_CONTRACT_ADDRESS` in `frontend/.env`
+6. Start frontend
+7. Connect MetaMask and use the UI
+
+17. Contract Deployments
+------------------------
+The project deploys:
+- `RWATokenization` on the configured network
+- `FractionalAsset` sample contract with placeholder data
+
+For full production-style use, update IPFS CIDs and asset parameters before deploying sample fractional assets.

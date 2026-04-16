@@ -10,6 +10,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *      Deploy one instance per asset that requires fractional ownership.
  * @notice Group IBC02 - CSE542 Introduction to Blockchain
  */
+
+ // erc20 -> token functionality
+ // Ownable -> access control
+
 contract FractionalAsset is ERC20, Ownable {
     // ─── State ─────────────────────────────────────────────────────────────────
     string  public assetId;        // Human-readable asset identifier
